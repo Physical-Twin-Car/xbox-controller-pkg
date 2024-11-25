@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>xbox_controller_pkg</name>
+  <version>0.0.0</version>
+  <description>Xbox Controller Package</description>
+  <maintainer email="you@example.com">Your Name</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>my_robot_interfaces</depend>
+
+  <exec_depend>std_msgs</exec_depend>
+
+  <!-- Export -->
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
+
