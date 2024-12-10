@@ -13,11 +13,6 @@ class XboxControllerNode(Node):
         self.controller_publisher = self.create_publisher(BesturingsData, 'besturings_data', 10)
         self.parkour_publisher = self.create_publisher(Bool, 'lidar_parkour_mode', 10)
 
-        # self.throttle_publisher = self.create_publisher(Float32, 'throttle', 10)
-        # self.steering_publisher = self.create_publisher(Float32, 'steering', 10)
-        # self.direction_publisher = self.create_publisher(Float32, 'direction', 10)
-        # self.brake_publisher = self.create_publisher(Float32, 'brake', 10)
-
         pygame.init()
         pygame.joystick.init()
         self.joystick = pygame.joystick.Joystick(0)
@@ -44,6 +39,8 @@ class XboxControllerNode(Node):
         
         DPad_up = self.joystick.get_hat(0) == (0, 1)
         DPad_down = self.joystick.get_hat(0) == (0, -1)
+        # DPad_left = self.joystick.get_hat(0) == (-1, 0) # niet in gebruik
+        # DPad_right = self.joystick.get_hat(0) == (1, 0) # niet in gebruik
 
         #testen van dpad controller
         #print(f'up dpad: {up_DPad}')
@@ -57,6 +54,7 @@ class XboxControllerNode(Node):
             self.mode = 2
             print("Lidar Parkour mode activated.")
             self.send_parkour_message(True)
+            
 
         if self.mode == 1:
             if not self.started:
@@ -66,8 +64,7 @@ class XboxControllerNode(Node):
         if self.mode == 0:
             print(f'Mode: {self.mode}. Pick a mode: D-pad up for controller. D-pad down for lidar parkour.')
             return
-        
-            
+               
         
         if self.mode == 1 and self.started:
             throttle = (self.joystick.get_axis(4) + 1) / 2  # Right trigger for throttle
@@ -97,10 +94,6 @@ class XboxControllerNode(Node):
             # Publish the message
             self.controller_publisher.publish(besturings_data)
 
-            # self.throttle_publisher.publish(throttle)
-            # self.steering_publisher.publish(steering)
-            # self.brake_publisher.publish(brake)
-            # self.direction_publisher.publish(direction)
 
     def ignore_drift_zone(self, value):
         drift_zone = 0.05
@@ -112,7 +105,8 @@ class XboxControllerNode(Node):
         msg = Bool()
         msg.data = status
         self.parkour_publisher.publish(msg)
-        print('Bericht verzonden naar lidar_parkour_mode topic: "%s"' % msg.data)
+        print('Bericht verzonden naar lidar_parkour_node topic: "%s"' % msg.data)
+
 
         
 
