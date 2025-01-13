@@ -77,9 +77,9 @@ class XboxControllerNode(Node):
             direction = 0  # Neutral by default
             if self.joystick.get_button(1):  # 'B' button forward
                 direction = 1
-            elif self.joystick.get_button(2):  # 'X' button reverse
+            elif self.joystick.get_button(3):  # 'X' button reverse
                 direction = 2
-            elif self.joystick.get_button(3):  # 'Y' button neutral
+            elif self.joystick.get_button(4):  # 'Y' button neutral
                 direction = 0
 
             # Create a BesturingsData message for real car
@@ -89,7 +89,7 @@ class XboxControllerNode(Node):
             besturings_data.direction = int(direction)
             besturings_data.brake = float(brake)
 
-            print(f"Throttle: {throttle}, Brake: {brake}, Steering: {steering}")
+            print(f"Throttle: {throttle}, Brake: {brake}, Steering: {steering}, Direction: {direction}")
 
             # Publish the message
             self.controller_publisher.publish(besturings_data)
