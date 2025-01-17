@@ -12,11 +12,14 @@ class XboxControllerNode(Node):
 
         self.controller_publisher = self.create_publisher(BesturingsData, 'besturings_data', 10)
         self.parkour_publisher = self.create_publisher(Bool, 'lidar_parkour_mode', 10)
+        self.nav_mode_publisher = self.create_publisher(Bool, '/nav_mode', 10)
 
         pygame.init()
         pygame.joystick.init()
         self.joystick = pygame.joystick.Joystick(0)
         self.joystick.init()
+
+        self.direction = 0
 
         self.started = False
         self.prev_a = 0
@@ -37,10 +40,10 @@ class XboxControllerNode(Node):
             
         self.prev_a = a_button
         
-        DPad_up = self.joystick.get_hat(0) == (0, 1)
-        DPad_down = self.joystick.get_hat(0) == (0, -1)
-        # DPad_left = self.joystick.get_hat(0) == (-1, 0) # niet in gebruik
-        # DPad_right = self.joystick.get_hat(0) == (1, 0) # niet in gebruik
+        DPad_up = self.joystick.get_hat(0) == (0, 1) # controller mode
+        DPad_down = self.joystick.get_hat(0) == (0, -1) #parkour mode
+        DPad_left = self.joystick.get_hat(0) == (-1, 0) # standby mode
+        DPad_right = self.joystick.get_hat(0) == (1, 0) # navigatie mode
 
         #testen van dpad controller
         #print(f'up dpad: {up_DPad}')
@@ -54,6 +57,23 @@ class XboxControllerNode(Node):
             self.mode = 2
             print("Lidar Parkour mode activated.")
             self.send_parkour_message(True)
+        elif DPad_right == True: # navigatie mode
+            self.started = False
+            self.mode = 2
+            self.send_nav_mode_message(True)
+            print("Navigation mode activated.")
+        elif DPad_left == True: # standby mode
+            self.started = False
+            self.mode = 0
+            self.send_nav_mode_message(False)
+            self.send_parkour_message(False)
+            besturings_data = BesturingsData()
+            besturings_data.throttle = 0.0
+            besturings_data.steering = 0.0
+            besturings_data.direction = 0
+            besturings_data.brake = 0.0
+            self.controller_publisher.publish(besturings_data)
+            print("Standby mode activated.")
             
 
         if self.mode == 1:
@@ -62,7 +82,7 @@ class XboxControllerNode(Node):
                 return
 
         if self.mode == 0:
-            print(f'Mode: {self.mode}. Pick a mode: D-pad up for controller. D-pad down for lidar parkour.')
+            print(f'Mode: {self.mode}. Pick a mode: D-pad up for controller. D-pad down for lidar parkour. D-pad right for navigation mode. D-pad left for standby mode.') 
             return
                
         
@@ -74,22 +94,22 @@ class XboxControllerNode(Node):
             steering = self.ignore_drift_zone(steering)
             
             # Define direction based on button presses
-            direction = 0  # Neutral by default
+            #direction = 0  # Neutral by default
             if self.joystick.get_button(1):  # 'B' button forward
-                direction = 1
+                self.direction = 1
             elif self.joystick.get_button(3):  # 'X' button reverse
-                direction = 2
+                self.direction = 2
             elif self.joystick.get_button(4):  # 'Y' button neutral
-                direction = 0
+                self.direction = 0
 
             # Create a BesturingsData message for real car
             besturings_data = BesturingsData()
             besturings_data.throttle = float(throttle)
             besturings_data.steering = float(steering)
-            besturings_data.direction = int(direction)
+            besturings_data.direction = int(self.direction)
             besturings_data.brake = float(brake)
 
-            print(f"Throttle: {throttle}, Brake: {brake}, Steering: {steering}, Direction: {direction}")
+            print(f"Throttle: {throttle}, Brake: {brake}, Steering: {steering}, Direction: {self.direction}")
 
             # Publish the message
             self.controller_publisher.publish(besturings_data)
@@ -106,6 +126,12 @@ class XboxControllerNode(Node):
         msg.data = status
         self.parkour_publisher.publish(msg)
         print('Bericht verzonden naar lidar_parkour_node topic: "%s"' % msg.data)
+
+    def send_nav_mode_message(self, status):
+        msg = Bool()
+        msg.data = status
+        self.nav_mode_publisher.publish(msg)
+        print('Bericht verzonden naar motor control, Navigation Mode, topic: "%s"' % msg.data)
 
 
         
